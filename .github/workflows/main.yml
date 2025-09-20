@@ -33,6 +33,7 @@ jobs:
           docker build -t seti-franquicias:$TAG -f deployment/Dockerfile .
 
       - name: Tag image for ECR
+        id: tag
         run: |
           TAG=${GITHUB_SHA::7}
           IMAGE_URI=${ECR_REPO}:$TAG
