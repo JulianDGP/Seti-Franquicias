@@ -2,6 +2,8 @@
 FROM gradle:8.7.0-jdk21 AS build
 WORKDIR /app
 COPY . .
+# Asegura permisos de ejecución para el wrapper (evita el error "Permission denied")
+RUN chmod +x ./gradlew
 # Construye sólo el jar del app-service
 RUN ./gradlew :app-service:bootJar -x validateStructure --no-daemon
 
