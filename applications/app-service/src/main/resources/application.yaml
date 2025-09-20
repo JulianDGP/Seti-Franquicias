@@ -12,7 +12,7 @@ spring:
   profiles:
     include: null
   r2dbc:
-    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/franquicias_db
+    url: r2dbc:postgresql://${DB_HOST}:${DB_PORT}/franquicias_db?sslMode=require
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     pool:
