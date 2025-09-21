@@ -38,7 +38,7 @@ public class FranquiciaR2dbcAdapter implements FranquiciaRepository {
         return op
                 .doOnSubscribe(s -> log.info("Guardando franquicia: {}", f.nombre()))
                 .map(FranquiciaR2dbcAdapter::toDomain)
-                .doOnSuccess(x -> log.info("Guardada franquicia id={}", x.id()));
+                .doOnSuccess(x -> log.info("Guardada franquicia con id={}", x.id()));
     }
 
     @Override
