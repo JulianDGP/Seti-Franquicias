@@ -1,4 +1,4 @@
-package ms.seti.usecase.crearfranquicia;
+package ms.seti.usecase;
 
 import lombok.RequiredArgsConstructor;
 import ms.seti.model.franquicia.Franquicia;
@@ -18,7 +18,7 @@ public class CrearFranquiciaUseCase {
                 .filter(s -> !s.isBlank())
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("El nombre es requerido")))
                 .flatMap(n -> repo.existsByNombre(n)
-                        .flatMap(exists -> exists
+                        .flatMap(exists -> Boolean.TRUE.equals(exists)
                                 ? Mono.error(new IllegalStateException("La franquicia ya existe"))
                                 : repo.save(Franquicia.builder().nombre(n).build())));
     }

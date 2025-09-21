@@ -1,14 +1,9 @@
 package ms.seti.model.sucursal;
 import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-//import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-//@NoArgsConstructor
-@AllArgsConstructor
 @Builder(toBuilder = true)
-public class Sucursal {
-}
+public record Sucursal(
+        Long id,
+        Long franquiciaId,
+        String nombre
+) {}

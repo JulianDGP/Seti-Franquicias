@@ -1,4 +1,4 @@
-package ms.seti.api.dto;
+package ms.seti.api.dto.request;
 
 public record CrearFranquiciaRequest(String nombre) {}
 

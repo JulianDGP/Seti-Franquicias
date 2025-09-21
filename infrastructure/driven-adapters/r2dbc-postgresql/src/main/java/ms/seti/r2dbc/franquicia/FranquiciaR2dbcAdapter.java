@@ -24,8 +24,8 @@ public class FranquiciaR2dbcAdapter implements FranquiciaRepository {
     public Mono<Boolean> existsByNombre(String nombre) {
         var q = Query.query(Criteria.where("nombre").is(nombre));
         return template.exists(q, FranquiciaData.class)
-                .doOnSubscribe(s -> log.debug("existsByNombre(nombre={})", nombre))
-                .doOnNext(exists -> log.debug("existsByNombre -> {}", exists));
+                .doOnSubscribe(s -> log.info("existsByNombre(nombre={})", nombre))
+                .doOnNext(exists -> log.info("existsByNombre -> {}", exists));
     }
 
     @Override
@@ -46,8 +46,8 @@ public class FranquiciaR2dbcAdapter implements FranquiciaRepository {
         var q = Query.query(Criteria.where("id").is(id));
         return template.selectOne(q, FranquiciaData.class)
                 .map(FranquiciaR2dbcAdapter::toDomain)
-                .doOnSubscribe(s -> log.debug("findById({})", id))
-                .doOnSuccess(x -> log.debug("findById -> {}", x));
+                .doOnSubscribe(s -> log.info("findById({})", id))
+                .doOnSuccess(x -> log.info("findById -> {}", x));
     }
 
     // ---- Mapeos ----
