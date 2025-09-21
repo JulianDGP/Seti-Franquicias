@@ -8,14 +8,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import ms.seti.api.dto.request.CrearProductoRequest;
+import ms.seti.api.dto.request.ModificarStockRequest;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
@@ -36,8 +36,7 @@ public class ProductoRouter {
     @Bean
     @RouterOperation(path = "/api/v1/productos/{id}", beanClass = ProductoHandler.class, beanMethod = "eliminar",
             operation = @Operation(operationId = "eliminarProducto", summary = "Elimina un producto por id",
-                    parameters = {
-                            @Parameter(name = "id", in = ParameterIn.PATH, required = true,
+                    parameters = {@Parameter(name = "id", in = ParameterIn.PATH, required = true,
                                     description = "ID del producto",
                                     schema = @Schema(type = "integer", format = "int64", minimum = "1"))
                     },
@@ -47,5 +46,21 @@ public class ProductoRouter {
                             @ApiResponse(responseCode = "404", description = "Producto no encontrado")}))
     public RouterFunction<ServerResponse> productoDeleteRoute(ProductoHandler handler) {
         return route(DELETE("/api/v1/productos/{id}"), handler::eliminar);
+    }
+
+    @Bean
+    @RouterOperation(path = "/api/v1/productos/{id}/stock", beanClass = ProductoHandler.class, beanMethod = "modificarStock",
+            operation = @Operation(operationId = "modificarStockProducto", summary = "Modifica el stock de un producto por id",
+                    parameters = {@Parameter(name = "id", in = ParameterIn.PATH, required = true,
+                                    description = "ID del producto",
+                                    schema = @Schema(type = "integer", format = "int64", minimum = "1"))
+                    },
+                    requestBody = @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ModificarStockRequest.class))),
+                    responses = {
+                            @ApiResponse(responseCode = "200", description = "Actualizado"),
+                            @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+                            @ApiResponse(responseCode = "404", description = "Producto no encontrado")}))
+    public RouterFunction<ServerResponse> productoUpdateStockRoute(ProductoHandler handler) {
+        return route(PUT("/api/v1/productos/{id}/stock"), handler::modificarStock);
     }
 }
