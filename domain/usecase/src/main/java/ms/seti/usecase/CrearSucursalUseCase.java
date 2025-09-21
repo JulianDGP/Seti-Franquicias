@@ -37,7 +37,7 @@ public class CrearSucursalUseCase {
         return sucRepo.existsByFranquiciaIdAndNombre(franquiciaId, nombre)
                 .defaultIfEmpty(false)
                 .flatMap(exists -> Boolean.TRUE.equals(exists)
-                        ? Mono.error(new IllegalStateException("La sucursal ya existe para esta franquicia"))
+                        ? Mono.error(new IllegalStateException("El nombre de la sucursal ya existe para esta franquicia"))
                         : Mono.empty());
     }
 

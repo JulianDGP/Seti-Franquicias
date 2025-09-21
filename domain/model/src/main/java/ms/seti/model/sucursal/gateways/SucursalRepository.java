@@ -7,4 +7,6 @@ public interface SucursalRepository {
     Mono<Boolean> existsByFranquiciaIdAndNombre(Long franquiciaId, String nombre);
     Mono<Sucursal> create(Sucursal sucursal);
     Mono<Sucursal> findById(Long id);
+    Mono<Sucursal> updateNombre(Long id, String nuevoNombre);
+
 }

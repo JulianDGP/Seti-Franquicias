@@ -47,4 +47,10 @@ public class UseCasesConfig {
             ms.seti.model.franquicia.gateways.FranquiciaRepository franquiciaRepository) {
         return new ActualizarNombreFranquiciaUseCase(franquiciaRepository);
     }
+
+    @Bean
+    public ActualizarNombreSucursalUseCase actualizarNombreSucursalUseCase(
+            ms.seti.model.sucursal.gateways.SucursalRepository sucursalRepository) {
+        return new ActualizarNombreSucursalUseCase(sucursalRepository);
+    }
 }

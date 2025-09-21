@@ -8,6 +8,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.NoSuchElementException;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -23,7 +25,7 @@ public class SucursalR2dbcAdapter  implements SucursalRepository {
                 .map(SucursalR2dbcAdapter::toDomain)
                 .doOnSuccess(x -> log.info("Persistida sucursal id={}", x.id()))
                 .onErrorMap(DuplicateKeyException.class,
-                        e -> new IllegalStateException("La sucursal ya existe para esta franquicia", e));
+                        e -> new IllegalStateException("El nombre de la sucursal ya existe para esta franquicia", e));
     }
 
     @Override
@@ -39,6 +41,21 @@ public class SucursalR2dbcAdapter  implements SucursalRepository {
                 .map(SucursalR2dbcAdapter::toDomain)
                 .doOnSubscribe(sub -> log.debug("findById({})", id))
                 .doOnSuccess(suc -> log.debug("findById -> {}", suc));
+    }
+
+    @Override
+    public Mono<Sucursal> updateNombre(Long id, String nuevoNombre) {
+        return reactiveRepo.findById(id)
+                .switchIfEmpty(Mono.error(new NoSuchElementException("Sucursal no encontrada")))
+                .flatMap(entity -> {
+                    entity.nombre = nuevoNombre;
+                    return reactiveRepo.save(entity);
+                })
+                .doOnSubscribe(sub -> log.info("Actualizando nombre de sucursal id={} -> '{}'", id, nuevoNombre))
+                .map(SucursalR2dbcAdapter::toDomain)
+                .doOnSuccess(updated -> log.info("Actualizada sucursal id={} nombre='{}'", updated.id(), updated.nombre()))
+                .onErrorMap(DuplicateKeyException.class,
+                        e -> new IllegalStateException("El nombre de la sucursal ya existe para esta franquicia", e));
     }
 
     private static Sucursal toDomain(SucursalData d) {
