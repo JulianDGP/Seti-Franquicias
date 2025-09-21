@@ -8,6 +8,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.NoSuchElementException;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -30,6 +32,16 @@ public class ProductoR2dbcAdapter implements ProductoRepository {
     }
 
     @Override
+    public Mono<Void> deleteById(Long id) {
+        return reactiveRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NoSuchElementException("Producto no encontrado")))
+                .doOnNext(entity -> log.info("Eliminando producto id={} (sucursalId={}, nombre='{}')",
+                        entity.id, entity.sucursalId, entity.nombre))
+                .flatMap(entity -> reactiveRepository.deleteById(id))
+                .doOnSuccess(vacio -> log.info("Eliminado producto id={}", id));
+    }
+
+    @Override
     public Mono<Boolean> existsBySucursalIdAndNombre(Long sucursalId, String nombre) {
         return reactiveRepository.existsBySucursalIdAndNombre(sucursalId, nombre)
                 .doOnSubscribe(subscription -> log.debug("existsBySucursalIdAndNombre(sucursalId={}, nombre={})", sucursalId, nombre))
@@ -43,6 +55,8 @@ public class ProductoR2dbcAdapter implements ProductoRepository {
                 .doOnSubscribe(subscription -> log.debug("findById({})", id))
                 .doOnSuccess(found -> log.debug("findById -> {}", found));
     }
+
+
 
     // --- Mapeos ---
     private static Producto toDomain(ProductoData data) {

@@ -6,6 +6,7 @@ import ms.seti.model.sucursal.gateways.SucursalRepository;
 import ms.seti.usecase.CrearFranquiciaUseCase;
 import ms.seti.usecase.CrearProductoUseCase;
 import ms.seti.usecase.CrearSucursalUseCase;
+import ms.seti.usecase.EliminarProductoUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,5 +25,10 @@ public class UseCasesConfig {
     @Bean
     public CrearProductoUseCase crearProductoUseCase(ProductoRepository productoRepository,SucursalRepository sucursalRepository) {
         return new CrearProductoUseCase(productoRepository, sucursalRepository);
+    }
+
+    @Bean
+    public EliminarProductoUseCase eliminarProductoUseCase(ProductoRepository productoRepository) {
+        return new EliminarProductoUseCase(productoRepository);
     }
 }

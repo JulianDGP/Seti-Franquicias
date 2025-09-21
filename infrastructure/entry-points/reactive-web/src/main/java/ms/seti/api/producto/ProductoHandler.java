@@ -7,6 +7,7 @@ import ms.seti.api.dto.response.ErrorResponseDto;
 import ms.seti.api.dto.response.ProductoResponse;
 import ms.seti.model.producto.Producto;
 import ms.seti.usecase.CrearProductoUseCase;
+import ms.seti.usecase.EliminarProductoUseCase;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -23,6 +24,8 @@ import static ms.seti.api.support.HttpErrors.selectOnErrorResponse;
 @RequiredArgsConstructor
 public class ProductoHandler {
     private final CrearProductoUseCase crearProductoUseCase;
+    private final EliminarProductoUseCase eliminarProductoUseCase;
+
 
     /** POST /api/v1/productos */
     public Mono<ServerResponse> crear(ServerRequest request) {
@@ -32,6 +35,19 @@ public class ProductoHandler {
                 .doOnSubscribe(subscription -> log.info("POST /api/v1/productos"))
                 .doOnError(e -> log.error("Error POST /productos", e))
                 .onErrorResume(selectOnErrorResponse()); // 400/404/409 aquí; ó 500 lo maneja GlobalErrorHandler
+    }
+
+    /** DELETE /api/v1/productos/{id} */
+    public Mono<ServerResponse> eliminar(ServerRequest request) {
+        Mono<Long> idMono = Mono.fromCallable(() -> Long.parseLong(request.pathVariable("id")))
+                .onErrorMap(NumberFormatException.class, e -> new IllegalArgumentException("id inválido"));
+
+        return idMono
+                .flatMap(eliminarProductoUseCase::execute)
+                .then(ServerResponse.noContent().build())
+                .doOnSubscribe(s -> log.info("DELETE /api/v1/productos/{}", request.pathVariable("id")))
+                .doOnError(e -> log.error("Error DELETE /productos/{}", request.pathVariable("id"), e))
+                .onErrorResume(selectOnErrorResponse()); // 400/404 aquí; 500 vía GlobalErrorHandler
     }
 
     private Mono<ServerResponse> createdResponse(Producto producto) {
