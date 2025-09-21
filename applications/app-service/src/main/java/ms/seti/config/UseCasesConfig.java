@@ -2,6 +2,7 @@ package ms.seti.config;
 
 import ms.seti.model.franquicia.gateways.FranquiciaRepository;
 import ms.seti.model.producto.gateways.ProductoRepository;
+import ms.seti.model.producto.gateways.ProductoTopPorSucursalQueryRepository;
 import ms.seti.model.sucursal.gateways.SucursalRepository;
 import ms.seti.usecase.*;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +21,7 @@ public class UseCasesConfig {
     }
 
     @Bean
-    public CrearProductoUseCase crearProductoUseCase(ProductoRepository productoRepository,SucursalRepository sucursalRepository) {
+    public CrearProductoUseCase crearProductoUseCase(ProductoRepository productoRepository, SucursalRepository sucursalRepository) {
         return new CrearProductoUseCase(productoRepository, sucursalRepository);
     }
 
@@ -32,5 +33,13 @@ public class UseCasesConfig {
     @Bean
     public ModificarStockProductoUseCase modificarStockProductoUseCase(ProductoRepository productoRepository) {
         return new ModificarStockProductoUseCase(productoRepository);
+    }
+
+    @Bean
+    public ObtenerTopProductoPorSucursalUseCase obtenerTopProductoPorSucursalUseCase(
+            FranquiciaRepository franquiciaRepository,
+            ProductoTopPorSucursalQueryRepository queryRepository
+    ) {
+        return new ObtenerTopProductoPorSucursalUseCase(franquiciaRepository, queryRepository);
     }
 }
