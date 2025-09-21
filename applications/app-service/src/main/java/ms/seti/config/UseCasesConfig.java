@@ -3,10 +3,7 @@ package ms.seti.config;
 import ms.seti.model.franquicia.gateways.FranquiciaRepository;
 import ms.seti.model.producto.gateways.ProductoRepository;
 import ms.seti.model.sucursal.gateways.SucursalRepository;
-import ms.seti.usecase.CrearFranquiciaUseCase;
-import ms.seti.usecase.CrearProductoUseCase;
-import ms.seti.usecase.CrearSucursalUseCase;
-import ms.seti.usecase.EliminarProductoUseCase;
+import ms.seti.usecase.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,5 +27,10 @@ public class UseCasesConfig {
     @Bean
     public EliminarProductoUseCase eliminarProductoUseCase(ProductoRepository productoRepository) {
         return new EliminarProductoUseCase(productoRepository);
+    }
+
+    @Bean
+    public ModificarStockProductoUseCase modificarStockProductoUseCase(ProductoRepository productoRepository) {
+        return new ModificarStockProductoUseCase(productoRepository);
     }
 }

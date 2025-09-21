@@ -8,4 +8,5 @@ public interface ProductoRepository {
     Mono<Producto> create(Producto producto);
     Mono<Producto> findById(Long id);
     Mono<Void> deleteById(Long id);
+    Mono<Producto> updateStock(Long id, Integer stock);
 }

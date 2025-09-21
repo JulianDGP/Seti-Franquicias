@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ms.seti.model.producto.Producto;
 import ms.seti.model.producto.gateways.ProductoRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -42,6 +43,21 @@ public class ProductoR2dbcAdapter implements ProductoRepository {
     }
 
     @Override
+    public Mono<Producto> updateStock(Long id, Integer stock) {
+        return reactiveRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NoSuchElementException("Producto no encontrado")))
+                .flatMap(productEntity -> {
+                    productEntity.stock = stock;
+                    return reactiveRepository.save(productEntity);
+                })
+                .doOnSubscribe(s -> log.info("Actualizando stock de producto id={} a {}", id, stock))
+                .map(ProductoR2dbcAdapter::toDomain)
+                .doOnSuccess(updated -> log.info("Actualizado stock producto id={} -> {}", id, updated.stock()))
+                .onErrorMap(DataIntegrityViolationException.class,
+                        e -> new IllegalArgumentException("El stock no puede ser negativo", e));
+    }
+
+    @Override
     public Mono<Boolean> existsBySucursalIdAndNombre(Long sucursalId, String nombre) {
         return reactiveRepository.existsBySucursalIdAndNombre(sucursalId, nombre)
                 .doOnSubscribe(subscription -> log.debug("existsBySucursalIdAndNombre(sucursalId={}, nombre={})", sucursalId, nombre))
@@ -55,7 +71,6 @@ public class ProductoR2dbcAdapter implements ProductoRepository {
                 .doOnSubscribe(subscription -> log.debug("findById({})", id))
                 .doOnSuccess(found -> log.debug("findById -> {}", found));
     }
-
 
 
     // --- Mapeos ---
