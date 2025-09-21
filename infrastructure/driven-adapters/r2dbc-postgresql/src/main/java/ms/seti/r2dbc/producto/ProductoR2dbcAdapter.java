@@ -58,6 +58,21 @@ public class ProductoR2dbcAdapter implements ProductoRepository {
     }
 
     @Override
+    public Mono<Producto> updateNombre(Long id, String nuevoNombre) {
+        return reactiveRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NoSuchElementException("Producto no encontrado")))
+                .flatMap(entity -> {
+                    entity.nombre = nuevoNombre;
+                    return reactiveRepository.save(entity);
+                })
+                .doOnSubscribe(s -> log.info("Actualizando nombre de producto id={} -> '{}'", id, nuevoNombre))
+                .map(ProductoR2dbcAdapter::toDomain)
+                .doOnSuccess(updated -> log.info("Actualizado nombre producto id={} nombre='{}'", updated.id(), updated.nombre()))
+                .onErrorMap(DuplicateKeyException.class,
+                        e -> new IllegalStateException("El nombre de este producto ya existe para esta sucursal", e));
+    }
+
+    @Override
     public Mono<Boolean> existsBySucursalIdAndNombre(Long sucursalId, String nombre) {
         return reactiveRepository.existsBySucursalIdAndNombre(sucursalId, nombre)
                 .doOnSubscribe(subscription -> log.debug("existsBySucursalIdAndNombre(sucursalId={}, nombre={})", sucursalId, nombre))
