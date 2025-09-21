@@ -1,19 +1,20 @@
-name: Build, Push to ECR
+name: Build & Push to ECR (latest)
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 env:
   ECR_REPO: ${{ secrets.ECR_REPOSITORY }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
+  STABLE_TAG: latest
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Configure AWS credentials
@@ -24,22 +25,19 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build docker image
-        run: |
-          TAG=${GITHUB_SHA::7}
-          docker build -t seti-franquicias:$TAG -f deployment/Dockerfile .
+      - name: Compute short SHA
+        run: echo "SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
-      - name: Tag image for ECR
-        id: tag
+      - name: Build image (tag commit + latest)
         run: |
-          TAG=${GITHUB_SHA::7}
-          IMAGE_URI=${ECR_REPO}:$TAG
-          docker tag seti-franquicias:$TAG $IMAGE_URI
-          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_OUTPUT
+          docker build \
+            -t $ECR_REPO:${SHA_SHORT} \
+            -t $ECR_REPO:${STABLE_TAG} \
+            -f deployment/Dockerfile .
 
-      - name: Push image to ECR
+      - name: Push images
         run: |
-          docker push ${{ steps.tag.outputs.IMAGE_URI }}
+          docker push $ECR_REPO:${SHA_SHORT}
+          docker push $ECR_REPO:${STABLE_TAG}
