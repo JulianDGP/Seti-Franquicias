@@ -44,13 +44,19 @@ public class UseCasesConfig {
     }
     @Bean
     public ActualizarNombreFranquiciaUseCase actualizarNombreFranquiciaUseCase(
-            ms.seti.model.franquicia.gateways.FranquiciaRepository franquiciaRepository) {
+            FranquiciaRepository franquiciaRepository) {
         return new ActualizarNombreFranquiciaUseCase(franquiciaRepository);
     }
 
     @Bean
     public ActualizarNombreSucursalUseCase actualizarNombreSucursalUseCase(
-            ms.seti.model.sucursal.gateways.SucursalRepository sucursalRepository) {
+            SucursalRepository sucursalRepository) {
         return new ActualizarNombreSucursalUseCase(sucursalRepository);
+    }
+
+    @Bean
+    public ActualizarNombreProductoUseCase actualizarNombreProductoUseCase(
+            ProductoRepository repo) {
+        return new ActualizarNombreProductoUseCase(repo);
     }
 }

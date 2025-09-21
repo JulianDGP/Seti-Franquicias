@@ -2,10 +2,12 @@ package ms.seti.api.producto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import ms.seti.api.dto.request.ActualizarProductoRequest;
 import ms.seti.api.dto.request.CrearProductoRequest;
 import ms.seti.api.dto.request.ModificarStockRequest;
 import ms.seti.api.dto.response.ProductoResponse;
 import ms.seti.model.producto.Producto;
+import ms.seti.usecase.ActualizarNombreProductoUseCase;
 import ms.seti.usecase.CrearProductoUseCase;
 import ms.seti.usecase.EliminarProductoUseCase;
 import ms.seti.usecase.ModificarStockProductoUseCase;
@@ -28,6 +30,8 @@ public class ProductoHandler {
     private final CrearProductoUseCase crearProductoUseCase;
     private final EliminarProductoUseCase eliminarProductoUseCase;
     private final ModificarStockProductoUseCase modificarStockProductoUseCase;
+    private final ActualizarNombreProductoUseCase actualizarNombreProductoUseCase;
+
 
     /** POST /api/v1/productos */
     public Mono<ServerResponse> crear(ServerRequest request) {
@@ -61,6 +65,18 @@ public class ProductoHandler {
                 .flatMap(this::okResponse)
                 .doOnSubscribe(sub -> log.info("PUT /api/v1/productos/{}/stock", request.pathVariable("id")))
                 .doOnError(e -> log.error("Error PUT /productos/{}/stock", request.pathVariable("id"), e))
+                .onErrorResume(selectOnErrorResponse());
+    }
+
+    /** PUT /api/v1/productos/{id} (actualiza nombre) */
+    public Mono<ServerResponse> actualizarNombre(ServerRequest request) {
+        return validateLongId(request, "id")
+                .zipWith(readRequiredBody(request, ActualizarProductoRequest.class))
+                .flatMap(tuple -> actualizarNombreProductoUseCase.execute(
+                        tuple.getT1(), tuple.getT2().nombre()))
+                .flatMap(this::okResponse)
+                .doOnSubscribe(sub -> log.info("PUT /api/v1/productos/{}", request.pathVariable("id")))
+                .doOnError(e -> log.error("Error PUT /productos/{}", request.pathVariable("id"), e))
                 .onErrorResume(selectOnErrorResponse());
     }
 

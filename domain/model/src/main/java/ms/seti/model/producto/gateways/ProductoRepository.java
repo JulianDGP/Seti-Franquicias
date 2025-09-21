@@ -9,4 +9,5 @@ public interface ProductoRepository {
     Mono<Producto> findById(Long id);
     Mono<Void> deleteById(Long id);
     Mono<Producto> updateStock(Long id, Integer stock);
+    Mono<Producto> updateNombre(Long id, String nuevoNombre);
 }

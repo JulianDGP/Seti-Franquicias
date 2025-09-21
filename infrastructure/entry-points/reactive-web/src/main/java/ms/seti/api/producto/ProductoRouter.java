@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import ms.seti.api.dto.request.ActualizarProductoRequest;
 import ms.seti.api.dto.request.CrearProductoRequest;
 import ms.seti.api.dto.request.ModificarStockRequest;
 import org.springdoc.core.annotations.RouterOperation;
@@ -29,7 +30,7 @@ public class ProductoRouter {
                             @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
                             @ApiResponse(responseCode = "404", description = "Sucursal no encontrada"),
                             @ApiResponse(responseCode = "409", description = "Producto ya existe en la sucursal")}))
-    public RouterFunction<ServerResponse> productoRoutes(ProductoHandler handler) {
+    public RouterFunction<ServerResponse> productoCrearRoutes(ProductoHandler handler) {
         return route(POST("/api/v1/productos"), handler::crear);
     }
 
@@ -62,5 +63,20 @@ public class ProductoRouter {
                             @ApiResponse(responseCode = "404", description = "Producto no encontrado")}))
     public RouterFunction<ServerResponse> productoUpdateStockRoute(ProductoHandler handler) {
         return route(PUT("/api/v1/productos/{id}/stock"), handler::modificarStock);
+    }
+
+    @Bean
+    @RouterOperation(path = "/api/v1/productos/{id}", beanClass = ProductoHandler.class, beanMethod = "actualizarNombre",
+            operation = @Operation(operationId = "actualizarNombreProducto", summary = "Actualiza el nombre de un producto por id",
+                    parameters = {@Parameter(name = "id", in = ParameterIn.PATH, required = true,
+                            description = "ID del producto",
+                            schema = @Schema(type = "integer", format = "int64", minimum = "1"))},
+                    requestBody = @RequestBody(required = true, content = @Content(schema = @Schema(implementation = ActualizarProductoRequest.class))),
+                    responses = {@ApiResponse(responseCode = "200", description = "Actualizado"),
+                            @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+                            @ApiResponse(responseCode = "404", description = "Producto no encontrado"),
+                            @ApiResponse(responseCode = "409", description = "Ya existe en la sucursal")}))
+    public RouterFunction<ServerResponse> productoUpdateNombreRoute(ProductoHandler handler) {
+        return route(PUT("/api/v1/productos/{id}"), handler::actualizarNombre);
     }
 }
