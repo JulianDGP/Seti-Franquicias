@@ -7,4 +7,5 @@ public interface ProductoRepository {
     Mono<Boolean> existsBySucursalIdAndNombre(Long sucursalId, String nombre);
     Mono<Producto> create(Producto producto);
     Mono<Producto> findById(Long id);
+    Mono<Void> deleteById(Long id);
 }
