@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ms.seti.model.sucursal.Sucursal;
 import ms.seti.model.sucursal.gateways.SucursalRepository;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.query.Query;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -14,35 +12,32 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class SucursalR2dbcAdapter  implements SucursalRepository {
-    private final R2dbcEntityTemplate template;
+
+    private final SucursalDataRepository reactiveRepo;
+
+    @Override
+    public Mono<Sucursal> create(Sucursal s) {
+        var data = toData(s);
+        return reactiveRepo.save(data)
+                .doOnSubscribe(sub -> log.info("Insertando sucursal '{}'", data.nombre))
+                .map(SucursalR2dbcAdapter::toDomain)
+                .doOnSuccess(x -> log.info("Persistida sucursal id={}", x.id()))
+                .onErrorMap(DuplicateKeyException.class,
+                        e -> new IllegalStateException("La sucursal ya existe para esta franquicia", e));
+    }
 
     @Override
     public Mono<Boolean> existsByFranquiciaIdAndNombre(Long franquiciaId, String nombre) {
-        var query = Query.query(Criteria.where("franquicia_id").is(franquiciaId).and("nombre").is(nombre));
-        return template.exists(query, SucursalData.class)
-                .doOnSubscribe(s -> log.debug("existsByFranquiciaIdAndNombre(fid={}, nombre={})", franquiciaId, nombre))
+        return reactiveRepo.existsByFranquiciaIdAndNombre(franquiciaId, nombre)
+                .doOnSubscribe(sub -> log.debug("existsByFranquiciaIdAndNombre(fid={}, nombre={})", franquiciaId, nombre))
                 .doOnNext(exists -> log.debug("exists -> {}", exists));
     }
 
     @Override
-    public Mono<Sucursal> save(Sucursal s) {
-        var sucursalData = toData(s);
-        Mono<SucursalData> op = (sucursalData.id == null)
-                ? template.insert(SucursalData.class).using(sucursalData)
-                : template.update(sucursalData);
-
-        return op.doOnSubscribe(su -> log.info("{} sucursal '{}'",
-                        sucursalData.id == null ? "Insertando" : "Actualizando", sucursalData.nombre))
-                .map(SucursalR2dbcAdapter::toDomain)
-                .doOnSuccess(x -> log.info("Persistida sucursal id={}", x.id()));
-    }
-
-    @Override
     public Mono<Sucursal> findById(Long id) {
-        var query = Query.query(Criteria.where("id").is(id));
-        return template.selectOne(query, SucursalData.class)
-                .doOnSubscribe(s -> log.debug("findById({})", id))
+        return reactiveRepo.findById(id)
                 .map(SucursalR2dbcAdapter::toDomain)
+                .doOnSubscribe(sub -> log.debug("findById({})", id))
                 .doOnSuccess(suc -> log.debug("findById -> {}", suc));
     }
 

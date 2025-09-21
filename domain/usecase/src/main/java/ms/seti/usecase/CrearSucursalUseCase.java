@@ -43,6 +43,6 @@ public class CrearSucursalUseCase {
 
     private Mono<Sucursal> persist(Long franquiciaId, String nombre) {
         var s = Sucursal.builder().franquiciaId(franquiciaId).nombre(nombre).build();
-        return sucRepo.save(s);
+        return sucRepo.create(s);
     }
 }
