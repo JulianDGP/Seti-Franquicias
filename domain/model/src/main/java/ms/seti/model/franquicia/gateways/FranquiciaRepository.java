@@ -7,4 +7,5 @@ public interface FranquiciaRepository {
     Mono<Boolean> existsByNombre(String nombre);
     Mono<Franquicia> create(Franquicia franquicia);
     Mono<Franquicia> findById(Long id);
+    Mono<Franquicia> updateNombre(Long id, String nuevoNombre);
 }

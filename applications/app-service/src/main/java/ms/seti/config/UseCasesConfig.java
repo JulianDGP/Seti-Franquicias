@@ -42,4 +42,9 @@ public class UseCasesConfig {
     ) {
         return new ObtenerTopProductoPorSucursalUseCase(franquiciaRepository, queryRepository);
     }
+    @Bean
+    public ActualizarNombreFranquiciaUseCase actualizarNombreFranquiciaUseCase(
+            ms.seti.model.franquicia.gateways.FranquiciaRepository franquiciaRepository) {
+        return new ActualizarNombreFranquiciaUseCase(franquiciaRepository);
+    }
 }
