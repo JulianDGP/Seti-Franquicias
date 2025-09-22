@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.NoSuchElementException;
 
+import static ms.seti.usecase.support.Validations.normalizeNombre;
+
 /**
  * Caso de uso: Actualizar el nombre de una franquicia.
  * Flujo:
@@ -21,26 +23,19 @@ public class ActualizarNombreFranquiciaUseCase {
     private final FranquiciaRepository repo;
 
     public Mono<Franquicia> execute(Long id, String nuevoNombre) {
-        return repo.findById(id)
-                .switchIfEmpty(Mono.error(new NoSuchElementException("Franquicia no encontrada")))
-                .flatMap(actual ->
-                        normalizeNombre(nuevoNombre)
-                                .flatMap(nombreNormalizado -> {
+        return normalizeNombre(nuevoNombre) // valida primero (evita ir a BD si es inválido)
+                .flatMap(nombreNormalizado ->
+                        repo.findById(id)
+                                .switchIfEmpty(Mono.error(new NoSuchElementException("Franquicia no encontrada")))
+                                .flatMap(actual -> {
                                     if (nombreNormalizado.equals(actual.nombre())) {
-                                        // Idempotente: no hay cambios
-                                        return Mono.just(actual);
+                                        return Mono.just(actual); // idempotente
                                     }
                                     return ensureUnique(nombreNormalizado)
-                                            .then(repo.updateNombre(id, nombreNormalizado));
+                                            // Lazy: no preparar el update si unicidad falla;
+                                            .then(Mono.defer(() -> repo.updateNombre(id, nombreNormalizado)));
                                 })
                 );
-    }
-
-    private Mono<String> normalizeNombre(String nombre) {
-        return Mono.justOrEmpty(nombre)
-                .map(String::trim)
-                .filter(n -> !n.isBlank())
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("El nombre es requerido")));
     }
 
     private Mono<Void> ensureUnique(String nombre) {

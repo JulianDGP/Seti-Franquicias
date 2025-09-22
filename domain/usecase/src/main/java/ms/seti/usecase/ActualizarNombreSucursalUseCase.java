@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.NoSuchElementException;
 
+import static ms.seti.usecase.support.Validations.normalizeNombre;
+
 /**
  * Actualiza el nombre de una sucursal.
  * Flujo:
@@ -21,24 +23,19 @@ public class ActualizarNombreSucursalUseCase {
     private final SucursalRepository sucursalRepository;
 
     public Mono<Sucursal> execute(Long sucursalId, String nuevoNombre) {
-        return sucursalRepository.findById(sucursalId)
-                .switchIfEmpty(Mono.error(new NoSuchElementException("Sucursal no encontrada")))
-                .flatMap(actual -> normalizeNombre(nuevoNombre)
-                        .flatMap(nombreNormalizado -> {
-                            if (nombreNormalizado.equals(actual.nombre())) {
-                                return Mono.just(actual); // idempotente
-                            }
-                            return ensureUnique(actual.franquiciaId(), nombreNormalizado)
-                                    .then(sucursalRepository.updateNombre(sucursalId, nombreNormalizado));
-                        })
+        return normalizeNombre(nuevoNombre) // valida primero (evita tocar repos si es inválido)
+                .flatMap(nombreNormalizado ->
+                        sucursalRepository.findById(sucursalId)
+                                .switchIfEmpty(Mono.error(new NoSuchElementException("Sucursal no encontrada")))
+                                .flatMap(actual -> {
+                                    if (nombreNormalizado.equals(actual.nombre())) {
+                                        return Mono.just(actual); // idempotente
+                                    }
+                                    return ensureUnique(actual.franquiciaId(), nombreNormalizado)
+                                            // Lazy: no construir update si falla unicidad o no se necesita
+                                            .then(Mono.defer(() -> sucursalRepository.updateNombre(sucursalId, nombreNormalizado)));
+                                })
                 );
-    }
-
-    private Mono<String> normalizeNombre(String nombre) {
-        return Mono.justOrEmpty(nombre)
-                .map(String::trim)
-                .filter(n -> !n.isBlank())
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("El nombre es requerido")));
     }
 
     private Mono<Void> ensureUnique(Long franquiciaId, String nombre) {
