@@ -5,6 +5,8 @@ import ms.seti.model.franquicia.Franquicia;
 import ms.seti.model.franquicia.gateways.FranquiciaRepository;
 import reactor.core.publisher.Mono;
 
+import static ms.seti.usecase.support.Validations.normalizeNombre;
+
 @RequiredArgsConstructor
 public class CrearFranquiciaUseCase {
     private final FranquiciaRepository repo;
@@ -14,15 +16,7 @@ public class CrearFranquiciaUseCase {
      */
     public Mono<Franquicia> execute(String nombre) {
         return normalizeNombre(nombre)
-                .flatMap(n -> ensureUnique(n).then(persist(n)));
-    }
-
-    /** Quita espacios y valida no vacío. */
-    private Mono<String> normalizeNombre(String nombre) {
-        return Mono.justOrEmpty(nombre)
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("El nombre es requerido")));
+                .flatMap(n -> ensureUnique(n).then(Mono.defer(() -> persist(n)))); //Construir publisher final perezosamente
     }
 
     /** Verifica que no exista otra franquicia con el mismo nombre. */

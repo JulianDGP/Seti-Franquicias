@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.NoSuchElementException;
 
+import static ms.seti.usecase.support.Validations.normalizeStock;
+
 /**
  * Caso de uso: Modificar el stock de un producto.
  * Flujo:
@@ -21,15 +23,7 @@ public class ModificarStockProductoUseCase {
     public Mono<Producto> execute(Long productoId, Integer nuevoStock) {
         return normalizeStock(nuevoStock)
                 .flatMap(stockNormalizado -> ensureProductoExists(productoId)
-                        .then(productoRepository.updateStock(productoId, stockNormalizado)));
-    }
-
-    private Mono<Integer> normalizeStock(Integer stock) {
-        int seguro = (stock == null) ? 0 : stock;
-        if (seguro < 0) {
-            return Mono.error(new IllegalArgumentException("El stock no puede ser negativo"));
-        }
-        return Mono.just(seguro);
+                        .then(Mono.defer(() -> productoRepository.updateStock(productoId, stockNormalizado))));
     }
 
     private Mono<Void> ensureProductoExists(Long productoId) {

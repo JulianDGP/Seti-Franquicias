@@ -8,6 +8,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.NoSuchElementException;
 
+import static ms.seti.usecase.support.Validations.normalizeNombre;
+
 @RequiredArgsConstructor
 public class CrearSucursalUseCase {
     private final SucursalRepository sucRepo;
@@ -16,15 +18,9 @@ public class CrearSucursalUseCase {
     public Mono<Sucursal> execute(Long franquiciaId, String nombre) {
         return normalizeNombre(nombre)
                 .flatMap(n -> ensureFranquiciaExists(franquiciaId)
-                        .then(ensureUnique(franquiciaId, n))
-                        .then(persist(franquiciaId, n)));
-    }
-
-    private Mono<String> normalizeNombre(String nombre) {
-        return Mono.justOrEmpty(nombre)
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("El nombre es requerido")));
+                        // Deferimos para no construir el publisher si la franquicia no existe o si esta repetido
+                        .then(Mono.defer(() -> ensureUnique(franquiciaId, n)))
+                        .then(Mono.defer(() -> persist(franquiciaId, n))));
     }
 
     private Mono<Void> ensureFranquiciaExists(Long franquiciaId) {

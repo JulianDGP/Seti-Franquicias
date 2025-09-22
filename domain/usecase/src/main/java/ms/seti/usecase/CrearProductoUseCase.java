@@ -8,6 +8,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.NoSuchElementException;
 
+import static ms.seti.usecase.support.Validations.normalizeNombre;
+import static ms.seti.usecase.support.Validations.normalizeStock;
+
 /**
  * Caso de uso: Crear producto en una sucursal.
  * Flujo:
@@ -29,24 +32,9 @@ public class CrearProductoUseCase {
                     Integer stockNormalizado = tuple.getT2();
 
                     return ensureSucursalExists(sucursalId)
-                            .then(ensureUnique(sucursalId, nombreNormalizado))
-                            .then(persist(sucursalId, nombreNormalizado, stockNormalizado));
+                            .then(Mono.defer(() -> ensureUnique(sucursalId, nombreNormalizado)))
+                            .then(Mono.defer(() -> persist(sucursalId, nombreNormalizado, stockNormalizado)));
                 });
-    }
-
-    private Mono<String> normalizeNombre(String nombre) {
-        return Mono.justOrEmpty(nombre)
-                .map(String::trim)
-                .filter(n -> !n.isBlank())
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("El nombre es requerido")));
-    }
-
-    private Mono<Integer> normalizeStock(Integer stock) {
-        int stockSeguro = (stock == null) ? 0 : stock;
-        if (stockSeguro < 0) {
-            return Mono.error(new IllegalArgumentException("El stock no puede ser negativo"));
-        }
-        return Mono.just(stockSeguro);
     }
 
     private Mono<Void> ensureSucursalExists(Long sucursalId) {
