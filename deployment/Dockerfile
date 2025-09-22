@@ -5,7 +5,7 @@ COPY . .
 # Asegura permisos de ejecución para el wrapper (evita el error "Permission denied")
 RUN chmod +x ./gradlew
 # Construye sólo el jar del app-service
-RUN ./gradlew :app-service:bootJar -x validateStructure --no-daemon
+RUN gradle :app-service:bootJar -x validateStructure --no-daemon
 
 # Etapa de runtime (JRE, más liviano)
 FROM eclipse-temurin:21-jre-alpine
